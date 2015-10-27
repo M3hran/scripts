@@ -57,4 +57,5 @@ if [ "$FLAG" == false ]; then
 	echo "nisdomainname added..."
 fi
 
-printf "Done.\n\n"
+printf "Done.\n"
+printf "WARNING: Reboot recommended!\n\n"
