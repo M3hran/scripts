@@ -14,3 +14,5 @@ sed -i 's/ServerActive=127.0.0.1/ServerActive=zabbix.scientiamobile.local/' /etc
 sed -i 's/Hostname=Zabbix server/Hostname='$HOSTNAME'/' /etc/zabbix/zabbix_agentd.conf
 service zabbix-agent restart
 echo "done"
+echo "ATTN: configure Zabbix Server, with hostname below"
+grep ^Hostname /etc/zabbix/zabbix_agentd.conf
