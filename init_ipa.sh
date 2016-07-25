@@ -58,12 +58,7 @@ if [ "$FLAG" == false ]; then
 	echo "nisdomainname added..."
 fi
 
-#remove ubuntu account if it exits
-if grep -q ubuntu "/etc/passwd" ; then
-	printf "Removing Ubuntu account..\n"
-	userdel ubuntu
-	rm -rf /home/ubuntu
-fi
+
 
 printf "Done.\n"
 printf "WARNING: Reboot recommended!\n\n"
