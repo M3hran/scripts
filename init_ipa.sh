@@ -59,6 +59,6 @@ if [ "$FLAG" == false ]; then
 fi
 
 service sssd restart
-
-printf "Done.\n"
 printf "WARNING: Reboot recommended!\n\n"
+printf "Done.\n"
+
