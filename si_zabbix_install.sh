@@ -8,7 +8,7 @@ if ! [ $(id -u) = 0 ]; then
    exit 1
 fi
 
-VER=$(rpm -q --queryformat '%{VERSION}' $(rpm -qa '(redhat|sl|slf|centos|oraclelinux)-release(|-server|-workstation|-client|-computenode)')| awk -F '.' '{print $1}')
+VER=$(rpm -q --queryformat '%{VERSION}' $(rpm -qa '(redhat|sl|slf|centos|oraclelinux)-release(|-server|-workstation|-client|-computenode)')| cut -d "." -f 1)
 
 if ! [[ "$VER" =~ ^(5|6|7)$ ]] 
 then 
