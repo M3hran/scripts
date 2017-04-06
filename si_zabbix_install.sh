@@ -27,6 +27,8 @@ sed -i 's/LogFileSize=0/LogFileSize=500/' /etc/zabbix/zabbix_agentd.conf
 sed -i 's/Server=127.0.0.1/Server=160.111.100.251/' /etc/zabbix/zabbix_agentd.conf
 sed -i 's/ServerActive=127.0.0.1/ServerActive=160.111.100.251/' /etc/zabbix/zabbix_agentd.conf
 sed -i 's/Hostname=Zabbix server/Hostname='$HOSTNAME'/' /etc/zabbix/zabbix_agentd.conf
+chkconfig --add zabbix-agent
+chkconfig zabbix-agent on
 service zabbix-agent restart
 printf "$DATE zabbix-agent configured successfully\n" | tee -ai $INSTALLLOG
 printf "$DATE zabbix-agent agent " | tee -ai $INSTALLLOG 
