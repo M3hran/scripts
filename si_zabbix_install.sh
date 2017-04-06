@@ -30,7 +30,8 @@ sed -i 's/Hostname=Zabbix server/Hostname='$HOSTNAME'/' /etc/zabbix/zabbix_agent
 chkconfig --add zabbix-agent
 chkconfig zabbix-agent on
 service zabbix-agent restart
-printf "$DATE zabbix-agent configured successfully\n" | tee -ai $INSTALLLOG
+service zabbix-agent status
+printf "\n\n$DATE zabbix-agent configured successfully\n" | tee -ai $INSTALLLOG
 printf "$DATE zabbix-agent agent " | tee -ai $INSTALLLOG 
 grep "^Hostname=" /etc/zabbix/zabbix_agentd.conf | tee -ai $INSTALLLOG 
 printf "\n"
