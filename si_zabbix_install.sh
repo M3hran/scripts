@@ -1,6 +1,6 @@
 #!/bin/bash
 INSTALLLOG=/var/log/zabbix_install.log
-DATE=$(date +"%d-%m-%y %T")
+DATE=$(date +"%m-%d-%y %T")
 
 #prereq checks
 if ! [ $(id -u) = 0 ]; then
@@ -8,7 +8,7 @@ if ! [ $(id -u) = 0 ]; then
    exit 1
 fi
 
-VER=$(rpm -q --queryformat '%{VERSION}' $(rpm -qa '(redhat|sl|slf|centos|oraclelinux)-release(|-server|-workstation|-client|-computenode)'))
+VER=$(rpm -q --queryformat '%{VERSION}' $(rpm -qa '(redhat|sl|slf|centos|oraclelinux)-release(|-server|-workstation|-client|-computenode)')| awk -F '.''{print $1}')
 
 if ! [[ "$VER" =~ ^(5|6|7)$ ]] 
 then 
