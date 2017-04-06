@@ -18,7 +18,7 @@ fi
 
 #installation
 printf "$DATE Installing zabbix-agent..\n" | tee -ai $INSTALLLOG
-rpm -Uvh http://repo.zabbix.com/zabbix/3.0/rhel/$VER/x86_64/zabbix-release-3.0-1.el7.noarch.rpm
+rpm -Uvh http://repo.zabbix.com/zabbix/3.0/rhel/$VER/x86_64/zabbix-release-3.0-1.el$VER.noarch.rpm
 yum install -y zabbix-agent &>> $INSTALLLOG 
 
 #configuration
