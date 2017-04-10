@@ -34,4 +34,5 @@ service zabbix-agent status
 printf "\n\n$DATE zabbix-agent configured successfully\n" | tee -ai $INSTALLLOG
 printf "$DATE zabbix-agent agent " | tee -ai $INSTALLLOG 
 grep "^Hostname=" /etc/zabbix/zabbix_agentd.conf | tee -ai $INSTALLLOG 
-printf "\n"
+firewall-cmd --zone=public --add-port=10050/tcp &>> $INSTALLLOG
+printf "\n\n"
