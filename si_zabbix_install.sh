@@ -34,7 +34,7 @@ case "$VER" in
   7)
 	systemctl enable zabbix-agent
 
-	firewall-cmd --zone=public --add-port=10050/tcp &>> $INSTALLLOG
+	firewall-cmd --permanent --zone=public --add-port=10050/tcp &>> $INSTALLLOG
 
 	systemctl restart zabbix-agent
 	systemctl status zabbix-agent
