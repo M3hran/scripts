@@ -7,5 +7,6 @@
 git config --global user.name M3hran
 git config --global user.email m3hran@gmail.com
 git config --global color.ui auto
+git config --global init.defaultBranch master
 
 ssh -T git@github.com
