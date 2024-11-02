@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 apt-get update
 apt-get install freeipa-client htop iotop iftop ncdu pv
 
