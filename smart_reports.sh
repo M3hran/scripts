@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 DEVLIST="/tmp/devlist"
 LOGFILE="./smart_health_report_$(date -Is).txt"
 echo -e "SMART REPORT -- $(date)" > $LOGFILE
