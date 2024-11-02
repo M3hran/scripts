@@ -1,0 +1,31 @@
+#cloud-config
+#lock-passwd for ubuntu user not working manually unlocking in runcommands
+users:
+  - default
+  - name: ubuntu
+    passwd: "$6$Yz4IYMe3$NFZUp/KaljRqAzWqEmm08ACzRVhZ8ZKMPhSox5p8CqlwULuJQqLf7/onMEwZ./72RWEhZbdeORxYwIBMXfO5Y1"
+    shell: /bin/bash
+    lock-passwd: false
+    chpasswd: { expire: False }
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    ssh_authorized_keys:
+      - 
+timezone: America/New_York
+runcmd:
+    - apt update
+    - apt install -y qemu-guest-agent vim iputils-ping nfs-common ca-certificates curl
+    - install -m 0755 -d /etc/apt/keyrings
+    - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    - chmod a+r /etc/apt/keyrings/docker.asc
+    - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    - apt update
+    - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    - systemctl start qemu-guest-agent
+    - apt upgrade -y
+    - echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+    - sysctl -p
+    - usermod -U ubuntu
+    - touch /home/ubuntu/.hushlogin
+    - reboot
+
