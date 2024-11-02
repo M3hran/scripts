@@ -1,5 +1,5 @@
 #!/bin/sh
-
+#
 JAVA=java
 MAX_RAM_IN_MB=768
 DEBUG=0
