@@ -14,19 +14,20 @@ MAX_DAILY=7                    # Maximum daily backups to retain
 MAX_WEEKLY=3                   # Maximum weekly backups to retain
 MAX_MONTHLY=3                  # Maximum monthly backups to retain
 MAX_YEARLY=1                   # Maximum yearly backups to retain
+TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 
 # Load environment variables from the .env file
 if [ -f "wp_backups.env" ]; then
   source wp_backups.env
 else
-  echo "wp_backups.env file not found. Exiting."
+  echo "${TIMESTAMP}: wp_backups.env file not found. Exiting."
   exit 1
 fi
 
 
 # Ensure at least one website name is provided
 if [ $# -lt 1 ]; then
-  echo "Please provide at least one website name as an argument."
+  echo "${TIMESTAMP}: Please provide at least one website name as an argument."
   exit 1
 fi
 
@@ -49,7 +50,7 @@ backup_wordpress() {
   SITE_BACKUP_DIR="${BACKUP_DIR}/${WEBSITE_NAME}"
   #FILES_BACKUP_DIR="${SITE_BACKUP_DIR}/files"
   #DB_BACKUP_DIR="${SITE_BACKUP_DIR}/database"
-  TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+  
   #BACKUP_FILE="${FILES_BACKUP_DIR}/wp_files_${WEBSITE_NAME}_${DATE}.tar.gz"
   #DB_BACKUP_FILE="${DB_BACKUP_DIR}/${WEBSITE_NAME}_db_${DATE}.sql"
   BACKUP_FILE="${SITE_BACKUP_DIR}/${TIMESTAMP}_wp_files_${WEBSITE_NAME}.tar.gz"
@@ -64,17 +65,17 @@ backup_wordpress() {
   #mkdir -p "${DB_BACKUP_DIR}"
 
   # Backup WordPress files (excluding unnecessary files)
-  echo "Backing up WordPress files for ${WEBSITE_NAME}..."
+  echo "${TIMESTAMP}: Backing up WordPress files for ${WEBSITE_NAME}..."
   tar -czf "${BACKUP_FILE}" -C "${WEB_ROOT}/${WEBSITE_NAME}" . || {   
-  echo "Error backing up the files for ${WEBSITE_NAME}. Exiting."; 
+  echo "${TIMESTAMP}: Error backing up the files for ${WEBSITE_NAME}. Exiting."; 
   send_gotify_notification "WP Backup Failed: ${WEBSITE_NAME}" "Error occurred while backing up the files for ${WEBSITE_NAME}." >/dev/null 2>&1; 
   exit 1; }
 
   # Backup WordPress database using mysqldump
-  echo "Backing up database for ${WEBSITE_NAME}..."
+  echo "${TIMESTAMP}: Backing up database for ${WEBSITE_NAME}..."
   mysqldump -u "${MYSQL_USER}" -p"${MYSQL_PASSWORD}" -h "${MYSQL_HOST}" -P "${MYSQL_PORT}" "${DB_NAME}" > "${DB_BACKUP_FILE}" && \
   gzip "${DB_BACKUP_FILE}" || { 
-  echo "Error backing up the database for ${WEBSITE_NAME}. Exiting.";
+  echo "${TIMESTAMP}: Error backing up the database for ${WEBSITE_NAME}. Exiting.";
   send_gotify_notification "WP Backup Failed: ${WEBSITE_NAME}" "Error occurred while backing up the database for ${WEBSITE_NAME}." >/dev/null 2>&1;
   exit 1; }
 
@@ -100,7 +101,7 @@ promote_today_if_missing() {
     db_symlink=$(find "${site_backup_dir}" -name "${next_category}_*db_*" -type l)
 
     if [ -z "$wp_files_symlink" ] && [ -z "$db_symlink" ]; then
-        echo "No ${next_category} backup found. Promoting today's backup to ${next_category}..."
+        echo "${TIMESTAMP}: No ${next_category} backup found. Promoting today's backup to ${next_category}..."
         
         # Find today's backups for wp_files and db
         local TODAY_WP_BACKUP
@@ -113,15 +114,15 @@ promote_today_if_missing() {
             TARGET_WP=$(readlink -f "$TODAY_WP_BACKUP")
             NEW_NAME_WP=$(basename "${TODAY_WP_BACKUP}" | sed "s/daily_/${next_category}_/")
             ln -sf "$(basename "${TARGET_WP}")" "${site_backup_dir}/${NEW_NAME_WP}"
-            echo "WordPress files backup promoted to ${next_category}."
+            echo "${TIMESTAMP}: WordPress files backup promoted to ${next_category}."
 
             # Promote db backup
             TARGET_DB=$(readlink -f "$TODAY_DB_BACKUP")
             NEW_NAME_DB=$(basename "${TODAY_DB_BACKUP}" | sed "s/daily_/${next_category}_/")
             ln -sf "$(basename "${TARGET_DB}")" "${site_backup_dir}/${NEW_NAME_DB}"
-            echo "Database backup promoted to ${next_category}."
+            echo "${TIMESTAMP}: Database backup promoted to ${next_category}."
         else
-            echo "No backup for today found in daily. Cannot promote."
+            echo "${TIMESTAMP}: No backup for today found in daily. Cannot promote."
         fi
     fi
 }
@@ -133,18 +134,18 @@ cleanup_backups() {
     local site_name="$3"
     local site_backup_dir="${BACKUP_DIR}/${site_name}"
 
-    echo "Cleaning up old ${category} backups for ${site_name}..."
+    echo "${TIMESTAMP}: Cleaning up old ${category} backups for ${site_name}..."
     ls -t "${site_backup_dir}/${category}_"*"_wp_files_"* 2>/dev/null | tail -n +$((max_count + 1)) | xargs -r rm -f || {
-        echo "No ${category} backups to clean up or error during cleanup."
+        echo "${TIMESTAMP}: No ${category} backups to clean up or error during cleanup."
     }
     ls -t "${site_backup_dir}/${category}_"*"_db_"* 2>/dev/null | tail -n +$((max_count + 1)) | xargs -r rm -f || {
-        echo "No ${category} backups to clean up or error during cleanup."
+        echo "${TIMESTAMP}: No ${category} backups to clean up or error during cleanup."
     }
 }
 
 
 # Main script
-echo "Starting backup and retention script..."
+echo "${TIMESTAMP}: Starting backup and retention script..."
 
 # Loop through each website passed as a command-line argument
 for WEBSITE_NAME in "$@"
@@ -166,4 +167,4 @@ done
 
 
 
-echo "Backup and retention policy applied successfully."
+echo "${TIMESTAMP}: Backup and retention policy applied successfully."
