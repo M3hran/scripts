@@ -24,7 +24,6 @@ else
   exit 1
 fi
 
-
 # Ensure at least one website name is provided
 if [ $# -lt 1 ]; then
   echo "${TIMESTAMP}: Please provide at least one website name as an argument."
@@ -48,11 +47,7 @@ backup_wordpress() {
   # Define backup directories for the website
   WEBSITE_NAME="$1"
   SITE_BACKUP_DIR="${BACKUP_DIR}/${WEBSITE_NAME}"
-  #FILES_BACKUP_DIR="${SITE_BACKUP_DIR}/files"
-  #DB_BACKUP_DIR="${SITE_BACKUP_DIR}/database"
-  
-  #BACKUP_FILE="${FILES_BACKUP_DIR}/wp_files_${WEBSITE_NAME}_${DATE}.tar.gz"
-  #DB_BACKUP_FILE="${DB_BACKUP_DIR}/${WEBSITE_NAME}_db_${DATE}.sql"
+
   BACKUP_FILE="${SITE_BACKUP_DIR}/${TIMESTAMP}_wp_files_${WEBSITE_NAME}.tar.gz"
   DB_BACKUP_FILE="${SITE_BACKUP_DIR}/${TIMESTAMP}_db_${WEBSITE_NAME}.sql"
 
@@ -61,16 +56,16 @@ backup_wordpress() {
 
   # Create backup directories if they don't exist
   mkdir -p "${SITE_BACKUP_DIR}"
-  #mkdir -p "${FILES_BACKUP_DIR}"
-  #mkdir -p "${DB_BACKUP_DIR}"
 
   # Backup WordPress files (excluding unnecessary files)
   echo "${TIMESTAMP}: Backing up WordPress files for ${WEBSITE_NAME}..."
-  tar -czf "${BACKUP_FILE}" -C "${WEB_ROOT}/${WEBSITE_NAME}" . || {   
-  echo "${TIMESTAMP}: Error backing up the files for ${WEBSITE_NAME}. Exiting."; 
-  send_gotify_notification "WP Backup Failed: ${WEBSITE_NAME}" "Error occurred while backing up the files for ${WEBSITE_NAME}." >/dev/null 2>&1; 
-  exit 1; }
-
+  if [ -d "${WEB_ROOT}/${WEBSITE_NAME}" ]; then
+    tar -czf "${BACKUP_FILE}" -C "${WEB_ROOT}/${WEBSITE_NAME}" . 
+  else 
+    echo "${TIMESTAMP}: Error backing up the files for ${WEBSITE_NAME}. Exiting."; 
+    send_gotify_notification "WP Backup Failed: ${WEBSITE_NAME}" "Error occurred while backing up the files for ${WEBSITE_NAME}." >/dev/null 2>&1; 
+    exit 1; 
+  fi
   # Backup WordPress database using mysqldump
   echo "${TIMESTAMP}: Backing up database for ${WEBSITE_NAME}..."
   mysqldump -u "${MYSQL_USER}" -p"${MYSQL_PASSWORD}" -h "${MYSQL_HOST}" -P "${MYSQL_PORT}" "${DB_NAME}" > "${DB_BACKUP_FILE}" && \
@@ -163,8 +158,5 @@ do
     cleanup_backups "monthly" "${MAX_MONTHLY}" "${WEBSITE_NAME}"
     cleanup_backups "yearly" "${MAX_YEARLY}" "${WEBSITE_NAME}"
 done
-
-
-
 
 echo "${TIMESTAMP}: Backup and retention policy applied successfully."
