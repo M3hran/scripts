@@ -78,8 +78,7 @@ backup_wordpress() {
   ln -sf "$(basename "${BACKUP_FILE}")" "${SITE_BACKUP_DIR}/daily_${TIMESTAMP}_wp_files_${WEBSITE_NAME}.tar.gz"
   ln -sf "$(basename "${DB_BACKUP_FILE}.gz")" "${SITE_BACKUP_DIR}/daily_${TIMESTAMP}_db_${WEBSITE_NAME}.sql.gz"  
  
-  #Gotify notification for successful backup
-  send_gotify_notification "WP Backup Successfull: ${WEBSITE_NAME}" "${WEBSITE_NAME} backup has been successfully completed and old backups have been cleaned up."
+  
 }
 
 # Function to promote today's backup if needed
@@ -157,6 +156,9 @@ do
     cleanup_backups "weekly" "${MAX_WEEKLY}" "${WEBSITE_NAME}"
     cleanup_backups "monthly" "${MAX_MONTHLY}" "${WEBSITE_NAME}"
     cleanup_backups "yearly" "${MAX_YEARLY}" "${WEBSITE_NAME}"
+
+    #Gotify notification for successful backup
+    send_gotify_notification "WP Backup Successfull: ${WEBSITE_NAME}" "${WEBSITE_NAME} backup has been successfully completed and old backups have been cleaned up."
 done
 
 echo "${TIMESTAMP}: Backup and retention policy applied successfully."
