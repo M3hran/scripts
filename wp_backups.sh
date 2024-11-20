@@ -63,15 +63,15 @@ backup_wordpress() {
     tar -czf "${BACKUP_FILE}" -C "${WEB_ROOT}/${WEBSITE_NAME}" . 
   else 
     echo "${TIMESTAMP}: Error backing up the files for ${WEBSITE_NAME}. Exiting."; 
-    send_gotify_notification "WP Backup Failed: ${WEBSITE_NAME}" "Error occurred while backing up the files for ${WEBSITE_NAME}." >/dev/null 2>&1; 
+    send_gotify_notification "WP Backup Failed: ${WEBSITE_NAME}" "Error occurred while backing up the files for ${WEBSITE_NAME}." 
     exit 1; 
   fi
   # Backup WordPress database using mysqldump
   echo "${TIMESTAMP}: Backing up database for ${WEBSITE_NAME}..."
-  mysqldump -u "${MYSQL_USER}" -p"${MYSQL_PASSWORD}" -h "${MYSQL_HOST}" -P "${MYSQL_PORT}" "${DB_NAME}" > "${DB_BACKUP_FILE}" && \
+  mysqldump -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" -h"${MYSQL_HOST}" -P"${MYSQL_PORT}" "${DB_NAME}" > "${DB_BACKUP_FILE}" && \
   gzip "${DB_BACKUP_FILE}" || { 
   echo "${TIMESTAMP}: Error backing up the database for ${WEBSITE_NAME}. Exiting.";
-  send_gotify_notification "WP Backup Failed: ${WEBSITE_NAME}" "Error occurred while backing up the database for ${WEBSITE_NAME}." >/dev/null 2>&1;
+  send_gotify_notification "WP Backup Failed: ${WEBSITE_NAME}" "Error occurred while backing up the database for ${WEBSITE_NAME}.";
   exit 1; }
 
   # Create a symlink for today's backup (daily)
@@ -79,7 +79,7 @@ backup_wordpress() {
   ln -sf "$(basename "${DB_BACKUP_FILE}.gz")" "${SITE_BACKUP_DIR}/daily_${TIMESTAMP}_db_${WEBSITE_NAME}.sql.gz"  
  
   #Gotify notification for successful backup
-  send_gotify_notification "WP Backup Successfull: ${WEBSITE_NAME}" "${WEBSITE_NAME} backup has been successfully completed and old backups have been cleaned up." >/dev/null 2>&1
+  send_gotify_notification "WP Backup Successfull: ${WEBSITE_NAME}" "${WEBSITE_NAME} backup has been successfully completed and old backups have been cleaned up."
 }
 
 # Function to promote today's backup if needed
