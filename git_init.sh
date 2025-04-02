@@ -5,6 +5,7 @@
 #git remote set-url origin git@github.com:M3hran/scripts.git
 #
 #
+#
 
 apt update > /dev/null 2>&1
 apt install -y git
