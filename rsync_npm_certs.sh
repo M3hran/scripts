@@ -1,8 +1,8 @@
 #!/bin/bash
 
-TIMESTAMP=$(date +"[%Y-%m-%d %H:%M:%S]")
-GOTIFY_URL=""
-GOTIFY_APP_TOKEN=""
+TIMESTAMP=$(date +"[%m/%d/%Y] [%I:%M:%S %p]")
+GOTIFY_URL="https://gotify.parallaxsystem.com"
+GOTIFY_APP_TOKEN="ALq4MczJus1Vaw5"
 NPM_PROXY_HOST_DIR="/z/docker/nginx-proxy-manager/data/nginx/proxy_host"
 NPM_CERTS_DIR="/z/docker/nginx-proxy-manager/letsencrypt/live"
 DESTINATION_DIR="/z/mehran-backups/letsencrypt"
@@ -33,6 +33,7 @@ send_gotify_notification() {
   fi
 }
 
+
 # Function to log output
 print_message() {
 
@@ -48,7 +49,7 @@ rsync_if_matched() {
         REMOTE_LETSENCRYPT=$2
         domain_name=$3
 
-        print_message "-- Starting -- LetsEncrypt [cloud-proxy -> S3]"
+        #print_message "-- Starting -- LetsEncrypt [cloud-proxy -> S3][$domain_name]"
         rsync_output=$(rsync -Lazx ${ORIGINAL_LETSENCRYPT} ${REMOTE_LETSENCRYPT} --out-format='changed file: %i %n%L')
         rsync_returncode=$?
         changed_files_n=$(echo ${rsync_output} | grep 'changed file:')
@@ -57,23 +58,18 @@ rsync_if_matched() {
         if [ "$rsync_returncode" -eq "0" ]; then
 
         if [ -n "${changed_files}" ]; then
-                print_message "-- OK -- LetsEncrypt [cloud-proxy -> S3] "
+                print_message "[$domain_name -> S3] › ℹ     info      OK: Syncing file changes"
                 print_message "[$domain_name]\n ${changed_files}"
-                send_gotify_notification "OK - [cloud-proxy -> S3]" "[$domain_name]\n ${changed_files}"
+                send_gotify_notification "OK - ${TIMESTAMP} [$domain_name -> S3]" "[$domain_name]\n ${changed_files}"
         else
-                print_message "-- NOP -- No file changes."
+                print_message "[$domain_name -> S3] › ℹ     info      NOOP: No file changes."
         fi
 
         else
-                print_message "!! FAIL !! LetsEncrypt [cloud-proxy -> S3]"
-                send_gotify_notification "!! FAIL !! - [cloud-proxy -> S3]" "Backed up letsencrypt to S3 failed with error."
+                print_message "[$domain_name -> S3] › ❌     error     ERR: Sync failed with error."
+                send_gotify_notification "!! FAIL !! - [cloud-proxy -> S3][$domain_name]" "Backed up letsencrypt to S3 failed with error."
         fi
 }
-
-
-
-
-
 
 
 #### MAIN
@@ -101,6 +97,7 @@ for dir in "$NPM_CERTS_DIR"/*/; do
 
 
 done
+
 
 
 
