@@ -7,6 +7,9 @@
 apt update > /dev/null 2>&1
 apt install -y git
 
+eval `ssh-agent -s`
+ssh-add ./.ssh/id_rsa
+
 git config --global user.name M3hran
 git config --global user.email m3hran@gmail.com
 git config --global color.ui auto
