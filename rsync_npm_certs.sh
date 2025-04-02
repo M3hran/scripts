@@ -58,15 +58,15 @@ rsync_if_matched() {
         if [ "$rsync_returncode" -eq "0" ]; then
 
         if [ -n "${changed_files}" ]; then
-                print_message "[$domain_name -> S3] ➡ i     info      OK: Syncing file changes"
+                print_message "[$domain_name -> S3] → i     info      OK: Syncing file changes"
                 print_message "[$domain_name]\n ${changed_files}"
                 send_gotify_notification "OK - ${TIMESTAMP} [$domain_name -> S3]" "[$domain_name]\n ${changed_files}"
         else
-                print_message "[$domain_name -> S3] ➡ i     info      NOOP: No file changes."
+                print_message "[$domain_name -> S3] → i     info      NOOP: No file changes."
         fi
 
         else
-                print_message "[$domain_name -> S3] ➡ ❗    error     ERR: Sync failed with error."
+                print_message "[$domain_name -> S3] → ❗    error     ERR: Sync failed with error."
                 send_gotify_notification "!! FAIL !! - [cloud-proxy -> S3][$domain_name]" "Backed up letsencrypt to S3 failed with error."
         fi
 }
