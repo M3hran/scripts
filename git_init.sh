@@ -4,6 +4,8 @@
 ##ensure repo url is set to ssh format ex.
 #git remote set-url origin git@github.com:M3hran/scripts.git
 #
+#
+
 apt update > /dev/null 2>&1
 apt install -y git
 
@@ -16,4 +18,4 @@ git config --global color.ui auto
 git config --global init.defaultBranch master
 
 ssh -T git@github.com
-##
+
