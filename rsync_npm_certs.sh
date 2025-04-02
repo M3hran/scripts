@@ -66,7 +66,7 @@ rsync_if_matched() {
         fi
 
         else
-                print_message "[$domain_name -> S3] ⏵ ❗     error     ERR: Sync failed with error."
+                print_message "[$domain_name -> S3] ⏵ ❗    error     ERR: Sync failed with error."
                 send_gotify_notification "!! FAIL !! - [cloud-proxy -> S3][$domain_name]" "Backed up letsencrypt to S3 failed with error."
         fi
 }
