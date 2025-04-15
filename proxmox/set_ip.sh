@@ -19,6 +19,8 @@ fi
 
 # Assign the first argument to NEW_IP
 NEW_IP="$1"
+#GATEWAY_IP=$(sed -E 's/ (([0-9]{1,3}\.){3})[0-9]{1,3} / \1x)
+#DNS
 
 cat << EOF | tee /etc/netplan/01-netcfg.yaml > /dev/null
 network:
