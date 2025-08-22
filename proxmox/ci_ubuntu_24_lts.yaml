@@ -1,5 +1,5 @@
 #cloud-config
-#lock-passwd for ubuntu user not working manually unlocking in runcommands
+#proxmox ci path: /var/lib/vz/snippets/ci-ubuntu.yaml
 users:
   - default
   - name: ubuntu
@@ -10,11 +10,151 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: users, admin
     ssh_authorized_keys:
-      - 
+      - ssh-rsa ..
 timezone: America/New_York
+write_files:
+  - path: /z/scripts/set_hostname.sh
+    permissions: '0744'
+    owner: root:root
+    content: |
+      #!/bin/bash
+
+      # Ensure a hostname argument is provided
+      if [[ -z "$1" ]]; then
+        echo "Usage: $0 <new-hostname>"
+        exit 1
+      fi
+
+      # Assign the first argument to NEW_HOSTNAME
+      NEW_HOSTNAME="$1"
+
+      # Set the system hostname
+      hostnamectl set-hostname "$NEW_HOSTNAME"
+
+      # Update /etc/hosts with the new hostname
+      if grep -q "127.0.1.1" /etc/hosts; then
+        sed -i "s/.*127\.0\.1\.1.*/127.0.1.1 $NEW_HOSTNAME/" /etc/hosts
+      else
+        sed -i "/127\.0\.0\.1 localhost/a 127.0.1.1 $NEW_HOSTNAME" /etc/hosts
+      fi
+
+      # Update system mail setting with hostname
+      sed -i "s/HOSTNAME/$NEW_HOSTNAME/g" /etc/apt/apt.conf.d/50unattended-upgrades
+      sed -i "s/HOSTNAME/$NEW_HOSTNAME/g" /etc/ssmtp/ssmtp.conf
+      
+      echo "Hostname successfully updated to: $NEW_HOSTNAME"
+
+  - path: /z/scripts/set_ip.sh
+    permissions: '0744'
+    owner: root:root
+    content: |  
+      #!/bin/bash
+
+      # Ensure an IP argument is provided
+      if [[ -z "$1" ]] && [[ -z "$2" ]]; then
+        echo "Usage: $0 <new-ip-address> <gateway-address>"
+        exit 1
+      fi
+      # Find MAC Address
+      D='/sys/class/net/eth0'
+
+      if  grep -q up $D/operstate
+      then
+        
+          MAC=$(cat $D/$nic/address)
+      else
+        echo "Error: Could not find active interface!"
+        exit 1
+      fi
+
+      # Assign the first argument to NEW_IP
+      NEW_IP="$1"
+      NEW_GATEWAY="$2"
+
+      cat << EOF | tee /etc/netplan/01-netcfg.yaml > /dev/null
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            match:
+              macaddress: "$MAC"
+            set-name: "eth0"
+            dhcp4: false
+            addresses: ["$NEW_IP/24"]
+            routes:
+              - to: default
+                via: "$NEW_GATEWAY"
+                metric: 100
+            nameservers:
+              addresses: [192.168.1.10,192.168.1.1,1.1.1.1]
+              search: []
+            dhcp6: false
+      EOF
+      echo "Updated IP address to $NEW_IP in $NETPLAN_FILE"
+      # Apply the changes
+      echo "Applying netplan changes..."
+      mv /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.org
+      chmod 600 /etc/netplan/01-netcfg.yaml
+      sudo netplan apply
+      echo "Netplan configuration applied successfully."
+
+  - path: /z/docker/portainer_agent/docker-compose.yml
+    permissions: '0644'
+    owner: root:root
+    content: | 
+      services:
+        portainer-agent:
+          container_name: portainer-agent
+          image: portainer/agent
+          restart: always
+          ports:
+            - "9001:9001"
+          volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /var/lib/docker/volumes:/var/lib/docker/volumes
+            - /:/host
+      networks:
+        default:
+          external: true
+          name: m3
+ 
+  - path: /etc/ssmtp/ssmtp.conf
+    permissions: '0644'
+    owner: root:root
+    content: | 
+      root=HOSTNAME@parallaxsystem.com
+      mailhub=smtp.parallaxsystem.com:587
+      AuthUser=relay@parallaxsystem.com
+      AuthPass=
+      UseTLS=YES
+      UseSTARTTLS=YES
+      Debug=YES
+      hostname=HOSTNAME
+
+  - path: /etc/apt/apt.conf.d/50unattended-upgrades
+    permissions: '0644'
+    owner: root:root
+    content: | 
+      Unattended-Upgrade::Allowed-Origins {
+        "Docker:${distro_codename}";
+        "${distro_id}:${distro_codename}";
+        "${distro_id}:${distro_codename}-security";
+        "${distro_id}ESMApps:${distro_codename}-apps-security";
+        "${distro_id}ESM:${distro_codename}-infra-security";
+        "${distro_id}:${distro_codename}-updates";
+      };
+      Unattended-Upgrade::DevRelease "auto";
+      Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+      Unattended-Upgrade::Mail "relay@parallaxsystem.com";
+      Unattended-Upgrade::Sender "root@HOSTNAME";
+      Unattended-Upgrade::MailReport "on-change";
+      Unattended-Upgrade::Remove-Unused-Dependencies "true";
+      Unattended-Upgrade::Automatic-Reboot "true";
+      Unattended-Upgrade::Automatic-Reboot-Time "06:00";
+
 runcmd:
-    - apt update
-    - apt install -y qemu-guest-agent vim iputils-ping nfs-common ca-certificates curl
+    - apt update && apt upgrade -y
+    - apt install -y qemu-guest-agent vim iputils-ping nfs-common ca-certificates curl ssmtp htop mailutils
     - install -m 0755 -d /etc/apt/keyrings
     - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
     - chmod a+r /etc/apt/keyrings/docker.asc
@@ -22,10 +162,12 @@ runcmd:
     - apt update
     - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     - systemctl start qemu-guest-agent
-    - apt upgrade -y
-    - echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
-    - sysctl -p
+    - sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="ipv6.disable=1"/g' /etc/default/grub
+    - update-grub
     - usermod -U ubuntu
     - touch /home/ubuntu/.hushlogin
+    - docker network create m3
+    - cd /z/docker/portainer_agent && docker compose up -d
     - reboot
+
 
